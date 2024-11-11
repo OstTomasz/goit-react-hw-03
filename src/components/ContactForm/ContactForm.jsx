@@ -1,26 +1,42 @@
 import css from "./ContactForm.module.css";
 
 import { useId } from "react";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { v4 as uuidv4 } from "uuid";
 
 const initialValues = {
   name: "",
   number: "",
 };
 
-export const ContactForm = () => {
+const Schema = Yup.object().shape({
+  name: Yup.string()
+    .min(3, "Make it longer")
+    .max(50, "Make it shorter")
+    .required("Enter name"),
+  number: Yup.string()
+    .matches("^([0-9]{3}-){2}[0-9]{2}$", "Correct format: xxx-xxx-xx")
+    .required("Enter phone number"),
+});
+
+export const ContactForm = ({ addContact }) => {
   const nameFieldId = useId();
   const numberFieldId = useId();
 
   const handleSubmit = (values, actions) => {
-    console.log(values);
+    addContact({ name: values.name, number: values.number, id: uuidv4() });
     actions.resetForm();
   };
 
   return (
-    <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      onSubmit={handleSubmit}
+      validationSchema={Schema}
+    >
       <Form className="form">
-        <div>
+        <div className={css["form-component"]}>
           <label className="label" htmlFor={nameFieldId}>
             Name
           </label>
@@ -30,21 +46,28 @@ export const ContactForm = () => {
             name="name"
             id={nameFieldId}
             placeholder="John Smith"
-            required
+          />
+          <ErrorMessage
+            className={css["error-message"]}
+            name="name"
+            component="span"
           />
         </div>
-        <div>
+        <div className={css["form-component"]}>
           <label className="label" htmlFor={numberFieldId}>
             Number
           </label>
           <Field
             className="field"
             type="tel"
-            pattern="[0-9]{3}-[0-9]{3}-[0-9]{2}"
             name="number"
             id={numberFieldId}
             placeholder="xxx-xxx-xx"
-            required
+          />
+          <ErrorMessage
+            className={css["error-message"]}
+            name="number"
+            component="span"
           />
         </div>
         <button className={css["submit-btn"]} type="submit">
